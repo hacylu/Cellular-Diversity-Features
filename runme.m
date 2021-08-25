@@ -1,12 +1,30 @@
-addpath(genpath('./NuclearSegmentation/Veta'));
-addpath(genpath('./FeatureExtraction'));
-% addpath(genpath('./CCM_CRL'));
+addpath(genpath('./veta_watershed'));
+addpath(genpath('./staining_normalization'));
 
 %% step 1: load image
 img = imread('test.png');
-img=img(1:2000,1:2000,:);%imshow(img)
+curIM=img(1:2000,1:2000,:);%imshow(img)
 %% step 2: segment nuclei and save boundaries
-load('nuclei_properties.mat', 'nuclei', 'properties');
+close all
+
+curIMsize=size(curIM);
+[curIM_norm] = normalizeStaining(curIM);
+curIM_normRed=curIM_norm(:,:,1);
+
+p.scales=[6:4:16];
+disp('begin nuclei segmentation using watershed');
+[nuclei, properties] = nucleiSegmentationV2(curIM_normRed,p);
+
+figure;imshow(curIM);hold on;
+for k = 1:length(nuclei)
+    plot(nuclei{k}(:,2), nuclei{k}(:,1), 'g-', 'LineWidth', 2);
+end
+hold off;
+
+%%% or you can load precompuated nuclei boundaries and properties
+% load('nuclei_properties.mat', 'nuclei', 'properties');
+
+
 ctemp=[properties.Centroid];
 bounds.centroid_c=ctemp(1:2:end);
 bounds.centroid_r=ctemp(2:2:end);
